@@ -154,6 +154,57 @@ pub fn mle_poisson(data: &[u32]) -> f64 {
     sum as f64 / data.len() as f64
 }
 
+/// This function provides the Maximum Likelihood Estimator (MLE)
+/// for a Geometric distribution, given a slice of u32 data (failures before first success).
+///
+/// · Arguments:
+///   - `data`: a slice of `u32` values; each represents number of failures before first success.
+///
+/// · Returns:
+///   - The estimated success probability `p`, as an `f64`.
+///
+/// · Example:
+/// ```
+/// let data = vec![0, 1, 2, 1];
+/// let p = mle_geometric(&data);
+/// assert!((p - 0.4).abs() < 1e-6);
+/// ```
+///
+pub fn mle_geometric(data: &[u32]) -> f64 {
+    assert!(
+        !data.is_empty(),
+        "The data must not be empty."
+    );
+
+    let mean: f64 = data.iter().map(|&x| x as f64).sum::<f64>() / data.len() as f64;
+    1.0 / (1.0 + mean)
+}
+
+/// This function provides the Maximum Likelihood Estimator (MLE)
+/// for a Uniform(0, b) distribution, given a slice of positive f64 data.
+///
+/// · Arguments:
+///   - `data`: a slice of `f64` values; all values must be in [0, b].
+///
+/// · Returns:
+///   - The estimated upper bound `b`, as an `f64`.
+///
+/// · Example:
+/// ```
+/// let data = vec![0.5, 1.0, 0.8];
+/// let b = mle_uniform(&data);
+/// assert!((b - 1.0).abs() < 1e-6);
+/// ```
+///
+pub fn mle_uniform(data: &[f64]) -> f64 {
+    assert!(
+        !data.is_empty(),
+        "The data must not be empty."
+    );
+
+    *data.iter().fold(data.first().unwrap(), |max, &x| if x > *max { &x } else { max })
+}
+
 
 
 #[cfg(test)]
@@ -252,3 +303,44 @@ fn test_mle_poisson_empty() {
 
 }
 
+#[test]
+fn test_mle_geometric_basic() {
+    let data = vec![0, 1, 2, 1]; // mean = 1.0 → p = 1 / (1 + 1) = 0.5
+    let p = mle_geometric(&data);
+    assert!((p - 0.5).abs() < 1e-6);
+}
+
+#[test]
+#[should_panic(expected = "must not be empty")]
+fn test_mle_geometric_empty() {
+    let data: Vec<u32> = vec![];
+    let _ = mle_geometric(&data);
+}
+
+#[test]
+fn test_mle_geometric_zero_only() {
+    let data = vec![0, 0, 0, 0];
+    let p = mle_geometric(&data);
+    assert!((p - 1.0).abs() < 1e-6); // no failures → p = 1
+}
+
+#[test]
+fn test_mle_uniform_basic() {
+    let data = vec![0.5, 1.0, 0.8];
+    let b = mle_uniform(&data);
+    assert!((b - 1.0).abs() < 1e-6);
+}
+
+#[test]
+#[should_panic(expected = "must not be empty")]
+fn test_mle_uniform_empty() {
+    let data: Vec<f64> = vec![];
+    let _ = mle_uniform(&data);
+}
+
+#[test]
+fn test_mle_uniform_identical_values() {
+    let data = vec![2.0, 2.0, 2.0];
+    let b = mle_uniform(&data);
+    assert!((b - 2.0).abs() < 1e-6);
+}
