@@ -7,11 +7,6 @@ pub use self::traits::*;
 
 // Contributions on Maximum Likelihood Estimators
 pub mod mle;
-pub use mle::mle_normal;
-pub use mle::mle_binomial;
-pub use mle::mle_bernoulli;
-pub use mle::mle_exponential;
-pub use mle::mle_poisson;
 
 mod iter_statistics;
 mod order_statistics;
