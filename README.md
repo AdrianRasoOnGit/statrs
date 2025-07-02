@@ -28,6 +28,7 @@ Add this repo as a local dependency in your `Cargo.toml`:
 ```toml
 [dependencies]
 statrs = { path = "../statrs-mle-fork" }
+```
 
 ## Example
 
