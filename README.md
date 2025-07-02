@@ -34,8 +34,21 @@ statrs = { path = "../statrs-mle-fork" }
 
 Here we provide a brief showcase of Normal::mle() and Binomial::mle() features:
 
+```rust
 use statrs::distribution::{Normal, Binomial, Mle};
-<pre><code>```rustuse statrs::distribution::{Normal, Binomial, Mle};fn main() {// Estimate parameters of a Normal distributionlet data = [1.2, 2.3, 3.7, 4.1];let normal = Normal::mle(&(&data, true)).unwrap();println!("Estimated μ: {}, σ: {}", normal.mean(), normal.std_dev());// Estimate parameters of a Binomial distributionlet successes = [2, 3, 4]; // number of successeslet binomial = Binomial::mle(&(&successes, 5)).unwrap(); // 5 trialsprintln!("Estimated p: {}", binomial.p());}```</code></pre>
+
+fn main() {
+    // Estimate parameters of a Normal distribution
+    let data = [1.2, 2.3, 3.7, 4.1];
+    let normal = Normal::mle(&data).unwrap();
+    println!("Estimated μ: {}, σ: {}", normal.mean(), normal.std_dev());
+
+    // Estimate parameters of a Binomial distribution
+    let successes = [2, 3, 4]; // number of successes
+    let binomial = Binomial::mle(&successes, 5).unwrap(); // 5 trials
+    println!("Estimated p: {}", binomial.p());
+}
+```
 
 ## Why this fork?
 
