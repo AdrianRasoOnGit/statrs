@@ -38,7 +38,8 @@ pub trait Mle<'a> {
 ///
 /// # Example
 /// ```
-/// use statrs::distribution::{Normal, Mle};
+/// use statrs::distribution::Normal;
+/// use statrs::statistics::Mle;
 /// let data = [1.0, 2.0, 3.0];
 /// let dist = Normal::mle(&(&data, true)).unwrap();
 /// assert!((dist.mean() - 2.0).abs() < 1e-12);
@@ -152,7 +153,8 @@ impl<'a> Mle<'a> for Bernoulli {
 ///
 /// # Example
 /// ```
-/// use statrs::distribution::{Exp, Mle};
+/// use statrs::distribution::Exp;
+/// use statrs::statistics::Mle;
 /// let data = [1.0, 2.0];
 /// let dist = Exp::mle(&data).unwrap();
 /// assert!((dist.rate() - 2.0 / 3.0).abs() < 1e-10);
@@ -183,7 +185,8 @@ impl<'a> Mle<'a> for Exp {
 ///
 /// # Example
 /// ```
-/// use statrs::distribution::{Poisson, Mle};
+/// use statrs::distribution::Poisson;
+/// use statrs::statistics::mle::Mle;
 /// let data = [1, 2, 3];
 /// let dist = Poisson::mle(&data).unwrap();
 /// assert!((dist.lambda() - 2.0).abs() < 1e-12);
@@ -214,7 +217,8 @@ impl<'a> Mle<'a> for Poisson {
 ///
 /// # Example
 /// ```
-/// use statrs::distribution::{Geometric, Mle};
+/// use statrs::distribution::Geometric;
+///use statrs::statistics::mle::Mle;
 /// let data = [0, 1, 2];
 /// let dist = Geometric::mle(&data).unwrap();
 /// assert!((dist.p() - 0.5).abs() < 1e-10);
@@ -248,7 +252,8 @@ impl<'a> Mle<'a> for Geometric {
 ///
 /// # Example
 /// ```
-/// use statrs::distribution::{Uniform, Mle};
+/// use statrs::distribution::Uniform;
+/// use statrs::statistics::mle::Mle;
 /// let data = [1.0, 2.0, 3.0];
 /// let dist = Uniform::mle(&data).unwrap();
 /// assert_eq!(dist.min(), 0.0);
@@ -290,7 +295,8 @@ impl<'a> Mle<'a> for Uniform {
 ///
 /// # Example
 /// ```
-/// use statrs::distribution::{Gamma, Mle};
+/// use statrs::distribution::Gamma;
+/// use statrs::statistics::mle::Mle;
 /// let data = [2.0, 3.0, 4.0];
 /// let dist = Gamma::mle(&data).unwrap();
 /// assert!(dist.shape() > 0.0);
@@ -302,6 +308,18 @@ impl<'a> Mle<'a> for Gamma {
     fn mle(data: &Self::Data) -> Result<Self::Output, &'static str> {
         if data.is_empty() || data.iter().any(|&x| x <= 0.0 || !x.is_finite()) {
             return Err("invalid parameters");
+        }
+
+        fn trigamma(x: f64) -> f64 {
+            if x <= 0.0 {
+                return f64::NAN;
+            }
+            if x > 6.0 {
+                // Asymptotic expansion for large x
+                return 1.0 / x + 1.0 / (2.0 * x.powi(2)) + 1.0 / (6.0 * x.powi(3));
+            }
+            // Recursively use the identity ψ₁(x) = ψ₁(x + 1) + 1/x²
+            trigamma(x + 1.0) + 1.0 / (x * x)
         }
 
         let n = data.len() as f64;
@@ -319,7 +337,7 @@ impl<'a> Mle<'a> for Gamma {
         // Newton-Raphson refinement
         for _ in 0..20 {
             let psi = digamma(alpha);
-            let deriv = 1.0 / alpha; // crude trigamma approx, safe for moderate α
+            let deriv = trigamma(alpha); // proper trigamma approximation
             let delta = (psi - alpha.ln() + s) / (deriv - 1.0 / alpha);
             alpha -= delta;
 
@@ -340,6 +358,7 @@ impl<'a> Mle<'a> for Gamma {
     }
 }
 
+
 /// Implements Maximum Likelihood Estimation (MLE) for the Weibull distribution.
 ///
 /// Estimates the shape parameter `k` using Newton-Raphson iterations starting from
@@ -355,7 +374,8 @@ impl<'a> Mle<'a> for Gamma {
 ///
 /// # Example
 /// ```
-/// use statrs::distribution::{Weibull, Mle};
+/// use statrs::distribution::Weibull;
+/// use statrs::statistics::Mle;
 /// let data = [1.0, 2.0, 3.0, 4.0, 5.0];
 /// let dist = Weibull::mle(&data).unwrap();
 /// assert!(dist.shape() > 0.0);
@@ -428,7 +448,8 @@ impl<'a> Mle<'a> for Weibull {
 ///
 /// # Example
 /// ```
-/// use statrs::distribution::{Beta, Mle};
+/// use statrs::distribution::Beta;
+/// use statrs::statistics::mle::Mle;
 /// let data = [0.2, 0.4, 0.6, 0.8];
 /// let dist = Beta::mle(&data).unwrap();
 /// assert!(dist.shape_a() > 0.0);
@@ -503,7 +524,8 @@ impl<'a> Mle<'a> for Beta {
 ///
 /// # Example
 /// ```
-/// use statrs::distribution::{Normal, mle_for};
+/// use statrs::distribution::Normal;
+/// use statrs::statistics::mle::mle_for;
 /// let data = [1.0, 2.0, 3.0];
 /// let dist = mle_for::<Normal>(&(&data, true)).unwrap();
 /// assert!((dist.mean() - 2.0).abs() < 1e-10);
